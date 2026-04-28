@@ -9,7 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class GuestDao implements IGuestDao {
+public class GuestDao extends AbstractDao<Guest, Long> implements IGuestDao {
+
+    public GuestDao() {
+        super("guests");
+    }
 
     @Override
     public void insert(Connection conn, Guest guest) throws SQLException {
@@ -48,19 +52,6 @@ public class GuestDao implements IGuestDao {
     }
 
     @Override
-    public Optional<Guest> findById(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(GuestQueries.FIND_BY_ID)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public Optional<Guest> findByDocument(Connection conn, String documentNumber) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(GuestQueries.FIND_BY_DOCUMENT)) {
             ps.setString(1, documentNumber);
@@ -87,19 +78,6 @@ public class GuestDao implements IGuestDao {
     }
 
     @Override
-    public List<Guest> listAll(Connection conn) throws SQLException {
-        List<Guest> guests = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(GuestQueries.LIST_ALL)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    guests.add(mapRow(rs));
-                }
-            }
-        }
-        return guests;
-    }
-
-    @Override
     public List<Guest> listActive(Connection conn) throws SQLException {
         List<Guest> guests = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(GuestQueries.LIST_ACTIVE)) {
@@ -110,14 +88,6 @@ public class GuestDao implements IGuestDao {
             }
         }
         return guests;
-    }
-
-    @Override
-    public void delete(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(GuestQueries.DELETE)) {
-            ps.setLong(1, id);
-            ps.executeUpdate();
-        }
     }
 
     @Override
@@ -133,7 +103,8 @@ public class GuestDao implements IGuestDao {
         return 0;
     }
 
-    private Guest mapRow(ResultSet rs) throws SQLException {
+    @Override
+    protected Guest mapRow(ResultSet rs) throws SQLException {
         Guest guest = new Guest();
         guest.setId(rs.getLong("id"));
         guest.setFirstName(rs.getString("first_name"));

@@ -13,7 +13,11 @@ import java.util.Optional;
 /**
  * Implementation of IReservationDao using pure JDBC.
  */
-public class ReservationDao implements IReservationDao {
+public class ReservationDao extends AbstractDao<Reservation, Long> implements IReservationDao {
+
+    public ReservationDao() {
+        super("reservations");
+    }
 
     @Override
     public void insert(Connection conn, Reservation reservation) throws SQLException {
@@ -51,19 +55,6 @@ public class ReservationDao implements IReservationDao {
     }
 
     @Override
-    public Optional<Reservation> findById(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(ReservationQueries.FIND_BY_ID)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public List<Reservation> listAll(Connection conn) throws SQLException {
         List<Reservation> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(ReservationQueries.LIST_ALL)) {
@@ -74,14 +65,6 @@ public class ReservationDao implements IReservationDao {
             }
         }
         return list;
-    }
-
-    @Override
-    public void delete(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(ReservationQueries.DELETE)) {
-            ps.setLong(1, id);
-            ps.executeUpdate();
-        }
     }
 
     @Override
@@ -149,7 +132,8 @@ public class ReservationDao implements IReservationDao {
         }
     }
 
-    private Reservation mapRow(ResultSet rs) throws SQLException {
+    @Override
+    protected Reservation mapRow(ResultSet rs) throws SQLException {
         Reservation reservation = new Reservation();
         reservation.setId(rs.getLong("id"));
         reservation.setRoomId(rs.getLong("room_id"));

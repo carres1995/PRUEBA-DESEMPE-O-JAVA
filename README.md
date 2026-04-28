@@ -1,257 +1,232 @@
-#  HotelNova — Sistema de Gestión Hotelera
+# 🏨 HotelNova — Hotel Management System
 
-> **Prueba de Desempeño — Módulo 5.1 Java SE**  
-> Java SE + JavaFX + JDBC + Arquitectura por Capas + Archivos + Excepciones + Pruebas Unitarias
+> **Performance Test — Module 5.1 Java SE**  
+> Java SE + JavaFX + JDBC + Layered Architecture + Files + Exceptions + Unit Testing
 
 ---
 
-##  Datos del Coder
+## 👨‍💻 Developer Information
 
-| Campo | Información |
+| Field | Information |
 |-------|-------------|
-| **Nombre** | [Tu Nombre Completo] |
-| **Clan** | [Tu Clan] |
-| **Correo** | [tu.correo@riwi.io] |
-| **Documento** | [Tu Número de Documento] |
+| **Name** | [Your Full Name] |
+| **Clan** | [Your Clan] |
+| **Email** | [your.email@riwi.io] |
+| **Document ID** | [Your Document Number] |
 
 ---
 
-##  Descripción General del Sistema
+## 📖 System Overview
 
-**HotelNova** es un sistema de gestión hotelera desarrollado en **Java SE 17+** con interfaz gráfica en **JavaFX**, persistencia con **JDBC puro** y arquitectura **MVC por capas estrictas**. Resuelve los problemas operativos de HotelNova:
+**HotelNova** is a hotel management system developed in **Java SE 17+** with a **JavaFX** graphical interface, **pure JDBC** persistence, and a **strict Layered MVC** architecture. It solves the following operational issues:
 
-| Problema Original | Solución Implementada |
+| Original Problem | Implemented Solution |
 |------------------|-----------------------|
-| Duplicidad de reservas por IDs incorrectos | Validación de solapamiento de fechas + UNIQUE constraints |
-| Inconsistencias en disponibilidad | Transacciones JDBC: Check-in/out atómicos |
-| Falta de control de usuarios y roles | Autenticación con BCrypt + RBAC (ADMIN/RECEPTIONIST) |
-| Check-in/out incompletos o con errores | Flujo transaccional con validaciones de negocio |
-| Pérdida de información | Logs en DB, archivo `app.log` y exportación CSV |
+| Duplicate reservations due to incorrect IDs | Date overlap validation + UNIQUE constraints |
+| Availability inconsistencies | JDBC Transactions: Atomic Check-in/out |
+| Lack of user and role control | Authentication with BCrypt + RBAC (ADMIN/RECEPTIONIST) |
+| Incomplete or erroneous Check-in/out | Transactional flow with business validations |
+| Information loss | Logs in DB, `app.log` file, and CSV export |
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Technology Stack
 
-| Componente | Tecnología |
+| Component | Technology |
 |------------|-----------|
-| Lenguaje | Java 17+ |
-| Interfaz gráfica | JavaFX 21 |
+| Language | Java 17+ |
+| Graphical Interface | JavaFX 21 |
 | Build Tool | Apache Maven |
-| Base de datos (producción) | PostgreSQL (Supabase) |
-| Base de datos (pruebas) | H2 In-Memory |
-| Acceso a datos | Pure JDBC (`java.sql`) |
-| Hash de contraseñas | jBCrypt |
-| Pruebas unitarias | JUnit 5 + Mockito |
-| Arquitectura | MVC por Capas (Controller → Service → DAO → DB) |
+| Database (Production) | PostgreSQL (Supabase) |
+| Database (Testing) | H2 In-Memory |
+| Data Access | Pure JDBC (`java.sql`) |
+| Password Hashing | jBCrypt |
+| Unit Testing | JUnit 5 + Mockito |
+| Architecture | Layered MVC (Controller → Service → DAO → DB) |
 
 ---
 
-##  Soluciones a los Requisitos del Cliente
+## 💡 Solutions to Client Requirements
 
-### 1 Gestión de Habitaciones
--  Registro de habitaciones con: `id`, `numero`, `tipo`, `capacidad`, `precioPorNoche`, `estado`, `isActiva`, `createdAt`
--  Edición y actualización de habitaciones existentes
--  Validación de número de habitación único (`BR-003`)
--  Listado y filtro por tipo o estado desde la base de datos
--  Tabla visual con columnas alineadas en la UI de JavaFX
--  Inventario dinámico: números de habitación cargados desde `room_inventory`
+### 1️⃣ Room Management
+-  Room registration with: `id`, `number`, `type`, `capacity`, `price_per_night`, `status`, `is_active`, `created_at`
+-  Editing and updating existing rooms
+-  Unique room number validation (`BR-003`)
+-  Listing and filtering by type or status directly from the database
+-  Visual table with aligned columns in the JavaFX UI
+-  Dynamic inventory: room numbers loaded from `room_inventory`
 
-### 2 Gestión de Usuarios y Autenticación
--  Login con validación de credenciales y roles (`ADMIN` / `RECEPTIONIST`)
--  Contraseñas almacenadas con **BCrypt hash** (nunca en texto plano)
--  CRUD completo de usuarios con campo `email` obligatorio
--  Activación/desactivación de usuarios (toggle)
--  Logs HTTP en consola: `[POST] /auth/login → [200]`
--  Restricción de menú "Manage Users" solo para `ADMIN`
+### 2️⃣ User Management & Authentication
+-  Login with credential and role validation (`ADMIN` / `RECEPTIONIST`)
+-  Passwords stored with **BCrypt hash** (never in plain text)
+-  Full User CRUD with mandatory `email` field
+-  User activation/deactivation (toggle)
+-  HTTP Logs in console: `[POST] /auth/login → [200]`
+-  "Manage Users" menu restricted to `ADMIN` only
 
-### 3 Interfaz Gráfica (JavaFX)
--  Single-Stage con Scene Manager (un solo Stage, múltiples Scenes)
--  Dashboard central con navegación a todos los módulos
--  Menús por módulo: Habitaciones, Huéspedes, Usuarios, Reservas, Exportaciones
--  Confirmaciones y mensajes de éxito/error con `Alert`
--  Tablas con columnas completas y políticas de redimensionamiento
--  Menús contextuales (clic derecho) para operaciones de estado
+### 3️⃣ Graphical Interface (JavaFX)
+-  Single-Stage with Scene Manager (one Stage, multiple Scenes)
+-  Central Dashboard with navigation to all modules
+-  Module menus: Rooms, Guests, Users, Reservations, Exports
+-  Confirmations and success/error messages using `Alert`
+-  Tables with full columns and resizing policies
+-  Context menus (right-click) for status operations
 
-### 4 CRUD + JDBC + Transacciones
--  Interfaces DAO definidas en `dao/interfaces/`
--  Implementaciones JDBC con `PreparedStatement` + casting PostgreSQL (`::room_type`)
--  **Check-in**: `setAutoCommit(false)` → insertar reserva → actualizar habitación a `OCUPADA` → `commit()` / `rollback()`
--  **Check-out**: actualizar reserva a `COMPLETED` → calcular costo total + IVA → actualizar habitación a `DISPONIBLE` → `commit()`
--  `try-with-resources` en todas las conexiones y statements
+### 4️⃣ CRUD + JDBC + Transactions
+-  DAO interfaces defined in `dao/interfaces/`
+-  JDBC implementations using `PreparedStatement` + PostgreSQL casting (`::room_type`)
+-  **Check-in**: `setAutoCommit(false)` → insert reservation → update room to `OCCUPIED` → `commit()` / `rollback()`
+-  **Check-out**: update reservation to `COMPLETED` → calculate total cost + VAT → update room to `AVAILABLE` → `commit()`
+-  `try-with-resources` used in all connections and statements
 
-### 5 Manejo de Archivos
--  `config.properties` con: `vat=0.19`, `checkInHour=15`, `checkOutHour=12`
--  `database.properties` con: `db.url`, `db.user`, `db.password`, `db.driver`
--  Exportación a CSV:
-  - `exports/habitaciones_export_YYYYMMDD_HHmmss.csv` — listado completo
-  - `exports/reservas_activas_YYYYMMDD_HHmmss.csv` — solo reservas activas
--  Registro de actividad en `app.log` con `java.util.logging`
+### 5️⃣ File Handling
+-  `config.properties` with: `vat=0.19`, `checkInHour=15`, `checkOutHour=12`
+-  `database.properties` with: `db.url`, `db.user`, `db.password`, `db.driver`
+-  CSV Export:
+  - `exports/rooms_report.csv` — full listing
+  - `exports/active_reservations.csv` — active reservations only
+-  Activity logging in `app.log` using `java.util.logging`
 
-### 6 Excepciones y Validaciones
--  Excepciones personalizadas: `RoomException`, `GuestException`, `ReservationException`, `UserException`, `AuthenticationException`
--  Validaciones de negocio implementadas:
-  - Número de habitación único
-  - Habitación disponible para reserva
-  - Huésped activo para reserva
-  - Fechas válidas: `checkIn < checkOut`
-  - Sin solapamiento de reservas para la misma habitación
-  - No se permite check-out sin check-in previo
-  - **BR-006**: No se puede desactivar un huésped con reservas activas
--  Errores mostrados en `Alert` de JavaFX
--  Detalles guardados en `app.log` y tabla `activity_logs`
+### 6️⃣ Exceptions & Validations
+-  Custom Exceptions: `RoomException`, `GuestException`, `ReservationException`, `UserException`, `AuthenticationException`
+-  Business validations implemented:
+  - Unique room number
+  - Room availability for reservation
+  - Active guest for reservation
+  - Valid dates: `checkIn < checkOut`
+  - No date overlapping for the same room
+  - No check-out allowed without a prior check-in
+  - **BR-006**: Cannot deactivate a guest with active reservations
+-  Errors displayed in JavaFX `Alert`
+-  Details stored in `app.log` and `activity_logs` table
 
-### 7 Pruebas Unitarias (JUnit 5)
--  **42 pruebas** ejecutándose con `mvn test — BUILD SUCCESS`
--  `RoomServiceTest` (10 pruebas): número único, disponibilidad, tipos, precios
--  `GuestServiceTest` (11 pruebas): documento único, email, teléfono, BR-006
--  `ReservationServiceTest` (10 pruebas): fechas, solapamiento, check-in/out, costo con IVA
--  `UserServiceTest` (11 pruebas): credenciales, roles, BCrypt, email
+### 7️⃣ Unit Testing (JUnit 5)
+-  **42 tests** running with `mvn test — BUILD SUCCESS`
+-  `RoomServiceTest` (10 tests): unique number, availability, types, prices
+-  `GuestServiceTest` (11 tests): unique document, email, phone, BR-006
+-  `ReservationServiceTest` (10 tests): dates, overlap, check-in/out, cost with VAT
+-  `UserServiceTest` (11 tests): credentials, roles, BCrypt, email
 
 ---
 
-##  Requisitos Previos
+## 📋 Prerequisites
 
-| Herramienta | Versión Mínima | Verificación |
+| Tool | Minimum Version | Verification |
 |-------------|---------------|-------------|
 | Java JDK | 17+ | `java -version` |
 | Apache Maven | 3.8+ | `mvn -version` |
-| PostgreSQL | 14+ (o Supabase) | Acceso a BD remota incluido |
-| Git | Cualquiera | `git --version` |
+| PostgreSQL | 14+ (or Supabase) | Remote DB access included |
+| Git | Any | `git --version` |
 
->  **No se necesita instalar PostgreSQL localmente.** La aplicación se conecta a una instancia en **Supabase** ya configurada.
+> 💡 **No local PostgreSQL installation is required.** The application connects to a pre-configured **Supabase** instance.
 
 ---
 
-##  Pasos de Configuración y Ejecución
+## 🚀 Setup and Execution
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/[tu-usuario]/hotelNova.git
+git clone https://github.com/[your-user]/hotelNova.git
 cd hotelNova
 ```
 
-### 2. Verificar la configuración de la base de datos
+### 2. Verify Database Configuration
 
-El archivo `src/main/resources/database.properties` ya contiene la conexión a Supabase:
+The `src/main/resources/database.properties` file already contains the Supabase connection:
 
 ```properties
 db.url      = jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:5432/postgres?currentSchema=hotel
-db.user     = [usuario]
-db.password = [contraseña]
+db.user     = [user]
+db.password = [password]
 db.driver   = org.postgresql.Driver
 ```
 
->  Si usas tu propia BD PostgreSQL, actualiza estos valores con tus credenciales.
+> ⚠️ If using your own PostgreSQL DB, update these values with your credentials.
 
-### 3. Verificar parámetros de negocio
+### 3. Verify Business Parameters
 
-Archivo `src/main/resources/config.properties`:
+File `src/main/resources/config.properties`:
 
 ```properties
-vat=0.19          # IVA del 19% aplicado al costo total de la estadía
-checkInHour=15    # Hora oficial de check-in (3:00 PM)
-checkOutHour=12   # Hora oficial de check-out (12:00 PM)
+vat=0.19          # 19% VAT applied to the total stay cost
+checkInHour=15    # Official check-in time (3:00 PM)
+checkOutHour=12   # Official check-out time (12:00 PM)
 ```
 
-### 4. Ejecutar las pruebas unitarias
+### 4. Run Unit Tests
 
 ```bash
 mvn test
 ```
 
-**Resultado esperado:**
+**Expected Result:**
 ```
 Tests run: 42, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
-### 5. Ejecutar la aplicación
+### 5. Run the Application
 
 ```bash
 mvn javafx:run
 ```
 
-**Al iniciar, el sistema automáticamente:**
-1. Conecta a PostgreSQL
-2. Ejecuta los scripts SQL de inicialización (`sql/*.sql`)
-3. Muestra la pantalla de Login
+**Upon startup, the system automatically:**
+1. Connects to PostgreSQL
+2. Executes initialization SQL scripts (`sql/*.sql`)
+3. Displays the Login screen
 
-### 6. Credenciales de acceso por defecto
+### 6. Default Credentials
 
-| Usuario | Contraseña | Rol |
+| User | Password | Role |
 |---------|-----------|-----|
 | `admin` | `admin123` | ADMIN |
 
 ---
 
-## 🗂️ Estructura del Proyecto
+## 🗂️ Project Structure
 
 ```
 hotelNova/
-├── pom.xml                          # Configuración Maven + dependencias
-├── README.md                        # Este archivo
-├── app.log                          # Log de actividad (generado al ejecutar)
-├── exports/                         # Archivos CSV exportados (generados en runtime)
+├── pom.xml                          # Maven configuration + dependencies
+├── README.md                        # This file
+├── app.log                          # Activity log (generated at runtime)
+├── exports/                         # Exported CSV files (generated at runtime)
 │
 └── src/
     ├── main/
     │   ├── java/com/hotel/
-    │   │   ├── config/              # Configuración DB e inicialización
+    │   │   ├── config/              # DB config and initialization
     │   │   │   ├── AppConfig.java
     │   │   │   ├── ConnectionFactory.java
     │   │   │   └── DatabaseInitializer.java
-    │   │   ├── controller/          # Capa de entrada (MVC Controller)
-    │   │   │   ├── AuthenticationController.java
-    │   │   │   ├── GuestController.java
-    │   │   │   ├── ReservationController.java
-    │   │   │   ├── RoomController.java
-    │   │   │   └── UserController.java
-    │   │   ├── dao/                 # Capa de acceso a datos (JDBC)
-    │   │   │   ├── interfaces/      # Contratos DAO
-    │   │   │   ├── queries/         # Constantes SQL
-    │   │   │   ├── ActivityLogDao.java
-    │   │   │   ├── GuestDao.java
-    │   │   │   ├── ReservationDao.java
-    │   │   │   ├── RoomDao.java
-    │   │   │   └── UserDao.java
-    │   │   ├── exception/           # Excepciones personalizadas
-    │   │   ├── model/               # Entidades del dominio
-    │   │   ├── service/             # Lógica de negocio + transacciones
-    │   │   ├── util/                # Utilidades transversales
-    │   │   │   ├── AppLogger.java   # Logger: consola + archivo + BD
-    │   │   │   ├── ConfigUtil.java
-    │   │   │   ├── CsvExporter.java # Exportador CSV
-    │   │   │   ├── PasswordHasher.java
-    │   │   │   └── UserSession.java
-    │   │   └── view/                # Capa de presentación (JavaFX)
-    │   │       ├── MainView.java    # Stage Manager central
-    │   │       ├── LoginView.java
-    │   │       ├── GuestView.java
-    │   │       ├── ReservationView.java
-    │   │       ├── RoomView.java
-    │   │       └── UserView.java
+    │   │   ├── controller/          # Input layer (MVC Controller)
+    │   │   ├── dao/                 # Data access layer (JDBC)
+    │   │   │   ├── interfaces/      # DAO contracts
+    │   │   │   ├── queries/         # SQL constants
+    │   │   │   ├── AbstractDao.java # Base generic logic
+    │   │   │   └── ...              # Specific DAOs
+    │   │   ├── exception/           # Custom exceptions
+    │   │   ├── model/               # Domain entities
+    │   │   ├── service/             # Business logic + transactions
+    │   │   ├── util/                # Cross-cutting utilities
+    │   │   │   ├── AppLogger.java   # Logger: console + file + DB
+    │   │   │   ├── CsvExporter.java # CSV Exporter (with FileChooser)
+    │   │   │   └── ...
+    │   │   └── view/                # Presentation layer (JavaFX)
     │   └── resources/
-    │       ├── config.properties    # Parámetros de negocio (IVA, horarios)
-    │       ├── database.properties  # Conexión a PostgreSQL
-    │       ├── styles.css           # Estilos JavaFX
-    │       ├── doc/spec/            # Especificaciones técnicas por módulo
-    │       └── sql/                 # Scripts de migración de BD
-    │           ├── 001_create_schema.sql
-    │           ├── 002_insert_test_data.sql
-    │           ├── 003_room_inventory.sql
-    │           └── 004_fix_enums.sql
+    │       ├── config.properties    # Business parameters
+    │       ├── database.properties  # PostgreSQL connection
+    │       ├── styles.css           # JavaFX styles
+    │       └── sql/                 # DB migration scripts
     └── test/
-        └── java/com/hotel/service/  # Pruebas unitarias (JUnit 5 + Mockito)
-            ├── GuestServiceTest.java
-            ├── ReservationServiceTest.java
-            ├── RoomServiceTest.java
-            └── UserServiceTest.java
+        └── java/com/hotel/service/  # Unit tests (JUnit 5 + Mockito)
 ```
 
 ---
 
-## 🗃️ Modelo de Base de Datos
+## 🗃️ Database Model
 
 ```
 rooms               guests              users
@@ -281,49 +256,48 @@ created_at
 
 ---
 
-## 🔐 Reglas de Negocio Implementadas
+## 🔐 Implemented Business Rules
 
-| ID | Módulo | Regla |
+| ID | Module | Rule |
 |----|--------|-------|
-| BR-001 | Habitaciones | Número de habitación requerido |
-| BR-002 | Habitaciones | Precio por noche > 0 |
-| BR-003 | Habitaciones | Número de habitación único |
-| BR-004 | Habitaciones | Capacidad > 0 |
-| BR-005 | Habitaciones | Tipo de habitación requerido |
-| BR-006 | Habitaciones | No desactivar si está OCUPADA |
-| BR-001 | Huéspedes | Nombre requerido |
-| BR-002 | Huéspedes | Apellido requerido |
-| BR-003 | Huéspedes | Número de documento único |
-| BR-004 | Huéspedes | Formato de email válido |
-| BR-005 | Huéspedes | Teléfono 7-15 dígitos |
-| **BR-006** | **Huéspedes** | **No desactivar con reservas activas** |
-| BR-001 | Reservas | Check-in < Check-out |
-| BR-002 | Reservas | Habitación disponible |
-| BR-003 | Reservas | Huésped activo |
-| BR-004 | Reservas | Sin solapamiento de fechas |
-| BR-005 | Reservas | No check-out sin check-in previo |
-| BR-001 | Usuarios | Username requerido |
-| BR-002 | Usuarios | Contraseña mínimo 8 caracteres |
-| BR-003 | Usuarios | Username único |
-| BR-004 | Usuarios | Email requerido y válido |
-| BR-005 | Usuarios | Rol requerido |
+| BR-001 | Rooms | Room number required |
+| BR-002 | Rooms | Price per night > 0 |
+| BR-003 | Rooms | Unique room number |
+| BR-004 | Rooms | Capacity > 0 |
+| BR-005 | Rooms | Room type required |
+| BR-006 | Rooms | Do not deactivate if OCCUPIED |
+| BR-001 | Guests | First name required |
+| BR-002 | Guests | Last name required |
+| BR-003 | Guests | Unique document number |
+| BR-004 | Guests | Valid email format |
+| BR-005 | Guests | Phone 7-15 digits |
+| **BR-006** | **Guests** | **Do not deactivate with active reservations** |
+| BR-001 | Reservations | Check-in < Check-out |
+| BR-002 | Reservations | Room available |
+| BR-003 | Reservations | Guest active |
+| BR-004 | Reservations | No date overlap |
+| BR-005 | Reservations | No check-out without prior check-in |
+| BR-001 | Users | Username required |
+| BR-002 | Users | Password minimum 8 characters |
+| BR-003 | Users | Unique username |
+| BR-004 | Users | Email required and valid |
+| BR-005 | Users | Role required |
 
 ---
 
-## 📤 Exportación de Datos
+## 📤 Data Export
 
-Al presionar **"📤 Export CSV"** en el Dashboard:
+By clicking **"📤 Export CSV"** on the Dashboard:
 
-- **`exports/habitaciones_export_<timestamp>.csv`**: todas las habitaciones
-- **`exports/reservas_activas_<timestamp>.csv`**: reservas con estado CHECKIN
-
-Los archivos se crean en la carpeta `exports/` dentro del directorio del proyecto.
+- A **FileChooser** will open to let you pick a save location.
+- **Report 1**: All rooms.
+- **Report 2**: Active reservations (CHECKIN status).
 
 ---
 
-## 📝 Sistema de Logging
+## 📝 Logging System
 
-Cada operación genera una traza en **tres destinos simultáneos**:
+Every operation generates a trace in **three simultaneous destinations**:
 
 ```
 [2026-04-28 15:30:01] POST     /auth/login            → [200] User logged in: admin      | user:1
@@ -333,21 +307,21 @@ Cada operación genera una traza en **tres destinos simultáneos**:
 [2026-04-28 15:32:00] POST     /rooms                 → [400] [ERROR] Room already exists | user:1
 ```
 
-| Destino | Descripción |
+| Destination | Description |
 |---------|-------------|
-| **Consola** | Trazas HTTP en tiempo real |
-| **`app.log`** | Archivo persistente con `java.util.logging` |
-| **`activity_logs` (BD)** | Registro histórico con usuario, método, recurso y código de estado |
+| **Console** | Real-time HTTP traces |
+| **`app.log`** | Persistent file with `java.util.logging` |
+| **`activity_logs` (DB)** | Historical record with user, method, resource, and status code |
 
 ---
 
-## 🧪 Resumen de Pruebas
+## 🧪 Testing Summary
 
 ```bash
 mvn test
 ```
 
-| Suite | Pruebas | Resultado |
+| Suite | Tests | Result |
 |-------|---------|-----------|
 | `RoomServiceTest` | 10 | ✅ PASS |
 | `GuestServiceTest` | 11 | ✅ PASS |
@@ -357,13 +331,13 @@ mvn test
 
 ---
 
-## 🚨 Notas Importantes
+## 🚨 Important Notes
 
 > [!WARNING]
-> El archivo `database.properties` contiene credenciales reales. **No lo subas a un repositorio público** sin remover las contraseñas.
+> The `database.properties` file contains real credentials. **Do not upload it to a public repository** without removing the passwords.
 
 > [!NOTE]
-> Durante las pruebas unitarias (`mvn test`), el Logger muestra warnings de `activity_logs not found`. Esto es **esperado**: los tests usan H2 en memoria que no tiene esa tabla, pero el sistema los ignora correctamente sin fallar.
+> During unit tests (`mvn test`), the Logger displays warnings about `activity_logs not found`. This is **expected**: tests use H2 in-memory DB which doesn't have that table, but the system handles it gracefully.
 
 > [!TIP]
-> Para resetear la base de datos a su estado inicial, ejecuta manualmente `001_create_schema.sql` y `002_insert_test_data.sql` en tu cliente PostgreSQL.
+> To reset the database to its initial state, manually execute `001_create_schema.sql` and `002_insert_test_data.sql` in your PostgreSQL client.

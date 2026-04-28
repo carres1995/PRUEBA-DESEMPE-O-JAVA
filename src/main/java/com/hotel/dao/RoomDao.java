@@ -14,7 +14,11 @@ import java.util.Optional;
 /**
  * Implementation of IRoomDao using pure JDBC.
  */
-public class RoomDao implements IRoomDao {
+public class RoomDao extends AbstractDao<Room, Long> implements IRoomDao {
+
+    public RoomDao() {
+        super("rooms");
+    }
 
     @Override
     public void insert(Connection conn, Room room) throws SQLException {
@@ -50,19 +54,6 @@ public class RoomDao implements IRoomDao {
 
             ps.executeUpdate();
         }
-    }
-
-    @Override
-    public Optional<Room> findById(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(RoomQueries.FIND_BY_ID)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-            }
-        }
-        return Optional.empty();
     }
 
     @Override
@@ -115,19 +106,7 @@ public class RoomDao implements IRoomDao {
     }
 
     @Override
-    public List<Room> listAll(Connection conn) throws SQLException {
-        List<Room> rooms = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(RoomQueries.LIST_ALL)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    rooms.add(mapRow(rs));
-                }
-            }
-        }
-        return rooms;
-    }
-
-    private Room mapRow(ResultSet rs) throws SQLException {
+    protected Room mapRow(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setId(rs.getLong("id"));
         room.setNumber(rs.getString("number"));
@@ -138,14 +117,6 @@ public class RoomDao implements IRoomDao {
         room.setActive(rs.getBoolean("is_active"));
         room.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return room;
-    }
-
-    @Override
-    public void delete(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM rooms WHERE id = ?")) {
-            ps.setLong(1, id);
-            ps.executeUpdate();
-        }
     }
 
     @Override

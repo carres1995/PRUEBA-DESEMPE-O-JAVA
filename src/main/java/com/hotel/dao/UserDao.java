@@ -10,7 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class UserDao implements IUserDao {
+public class UserDao extends AbstractDao<User, Long> implements IUserDao {
+
+    public UserDao() {
+        super("users");
+    }
 
     @Override
     public void insert(Connection conn, User user) throws SQLException {
@@ -47,19 +51,6 @@ public class UserDao implements IUserDao {
     }
 
     @Override
-    public Optional<User> findById(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(UserQueries.FIND_BY_ID)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public Optional<User> findByUsername(Connection conn, String username) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(UserQueries.FIND_BY_USERNAME)) {
             ps.setString(1, username);
@@ -86,27 +77,7 @@ public class UserDao implements IUserDao {
     }
 
     @Override
-    public List<User> listAll(Connection conn) throws SQLException {
-        List<User> users = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(UserQueries.LIST_ALL)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    users.add(mapRow(rs));
-                }
-            }
-        }
-        return users;
-    }
-
-    @Override
-    public void delete(Connection conn, Long id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(UserQueries.DELETE)) {
-            ps.setLong(1, id);
-            ps.executeUpdate();
-        }
-    }
-
-    private User mapRow(ResultSet rs) throws SQLException {
+    protected User mapRow(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getLong("id"));
         user.setUsername(rs.getString("username"));
