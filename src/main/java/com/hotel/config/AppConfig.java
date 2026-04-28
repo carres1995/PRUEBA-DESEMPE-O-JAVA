@@ -5,8 +5,8 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Singleton que centraliza la configuración de la app.
- * Carga database.properties y app.properties del classpath.
+ * Singleton that centralizes the application configuration.
+ * Loads database.properties and app.properties from the classpath.
  */
 public class AppConfig {
 
@@ -32,10 +32,10 @@ public class AppConfig {
         try (InputStream is = getClass().getClassLoader()
                 .getResourceAsStream(filename)) {
             if (is == null) throw new RuntimeException(
-                    "No se encontró: " + filename);
+                    "Not found: " + filename);
             target.load(is);
         } catch (IOException e) {
-            throw new RuntimeException("Error cargando " + filename, e);
+            throw new RuntimeException("Error loading " + filename, e);
         }
     }
 
